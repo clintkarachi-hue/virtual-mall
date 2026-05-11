@@ -1,0 +1,107 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 0.1 Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return request.auth.token.email_verified == true; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'; 
+    }
+    
+    function isVendor() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendor'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true; 
+    }
+
+    // 0.2 Validations
+
+    function isValidUser(data) {
+      return data.uid == request.auth.uid
+        && data.keys().hasAll(['uid', 'name', 'email', 'role'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && data.role in ['customer', 'vendor', 'admin'];
+    }
+
+    // ==================
+    // USERS COLLECTION
+    // ==================
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      // Create user: require matching UID, require exact fields, forbid setting admin role
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId
+        && isValidUser(incoming())
+        && incoming().role in ['customer', 'vendor']
+        && incoming().createdAt == request.time;
+      
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId 
+        && isValidUser(incoming())
+        && (
+          (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']))
+        )
+        || isAdmin(); // Admins can update 'isApproved' or 'role'
+    }
+
+    // ==================
+    // PRODUCTS COLLECTION
+    // ==================
+    function isValidProductCreate(data) {
+      return data.keys().hasAll(['vendorId', 'title', 'price', 'stock', 'status'])
+        && data.vendorId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.price is number && data.price >= 0
+        && data.stock is number && data.stock >= 0
+        && data.status in ['draft', 'pending', 'active', 'rejected'];
+    }
+
+    match /products/{productId} {
+      // Anyone can read active products. Admins/Vendors can read others.
+      // Notice: If 'list': it must explicitly filter for 'active' or belong to them.
+      allow get: if existing().status == 'active' || (isSignedIn() && existing().vendorId == request.auth.uid) || isAdmin();
+      allow list: if resource.data.status == 'active' || (isSignedIn() && resource.data.vendorId == request.auth.uid) || isAdmin();
+
+      allow create: if isVendor() && isValidId(productId) 
+        && isValidProductCreate(incoming())
+        && incoming().createdAt == request.time;
+      
+      allow update: if (isVendor() && existing().vendorId == request.auth.uid)
+        && incoming().vendorId == existing().vendorId
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'price', 'stock', 'status', 'images', 'updatedAt'])
+        )
+        && incoming().updatedAt == request.time
+        || isAdmin();
+        
+      allow delete: if (isVendor() && existing().vendorId == request.auth.uid) || isAdmin();
+    }
+
+    // ==================
+    // ORDERS COLLECTION
+    // ==================
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && (existing().customerId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.customerId == request.auth.uid || isAdmin());
+      
+      allow create: if isSignedIn() && isValidId(orderId)
+        && incoming().customerId == request.auth.uid
+        && incoming().keys().hasAll(['customerId', 'totalAmount', 'status', 'items'])
+        && incoming().totalAmount is number && incoming().totalAmount >= 0
+        && incoming().status == 'pending'
+        && incoming().createdAt == request.time;
+        
+      allow update: if isAdmin(); // only admins can update order status for now
+    }
+  }
+}

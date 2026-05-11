@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile containing roles and basic info.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "vendor", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isApproved": { "type": "boolean", "description": "For vendors only" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product listing created by a vendor.",
+      "type": "object",
+      "properties": {
+        "vendorId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "compareAtPrice": { "type": "number" },
+        "stock": { "type": "number" },
+        "categoryId": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["draft", "pending", "active", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["vendorId", "title", "price", "stock", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order containing items and payment status.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "paid", "shipped", "delivered", "cancelled"] },
+        "paymentMethod": { "type": "string" },
+        "items": { "type": "array" },
+        "shippingAddress": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "totalAmount", "status", "items"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Global product catalog."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders."
+    }
+  }
+}
