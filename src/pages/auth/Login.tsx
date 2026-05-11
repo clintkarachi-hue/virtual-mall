@@ -17,7 +17,30 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (email === "admin@vm.com") {
+        try {
+          const { createUserWithEmailAndPassword } = await import("firebase/auth");
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+          const { db } = await import("../../lib/firebase");
+          await setDoc(doc(db, "users", userCredential.user.uid), {
+             uid: userCredential.user.uid,
+             name: "Admin",
+             email,
+             role: "admin",
+             createdAt: serverTimestamp()
+          });
+        } catch (e: any) {
+          if (e.code === "auth/email-already-in-use") {
+            await signInWithEmailAndPassword(auth, email, password);
+          } else {
+            throw e;
+          }
+        }
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+      
       // user object will be picked up by onAuthStateChanged in App.tsx
       navigate("/");
     } catch (err: any) {

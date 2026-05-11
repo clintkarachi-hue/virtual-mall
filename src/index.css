@@ -11,3 +11,13 @@
     @apply font-sans antialiased bg-white text-black;
   }
 }
+
+@layer utilities {
+  @keyframes slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
+  .animate-slide {
+    animation: slide 1.5s ease-in-out infinite;
+  }
+}

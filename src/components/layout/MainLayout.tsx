@@ -8,7 +8,7 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans">
       {/* Top Announcement Bar */}
-      <div className="h-10 bg-[#8c1c1c] text-white flex items-center justify-between px-4 sm:px-10 text-[10px] uppercase tracking-[0.2em] font-bold">
+      <div className="h-auto py-2 md:py-0 md:h-10 bg-[#8c1c1c] text-white flex flex-col md:flex-row items-center justify-center md:justify-between px-4 sm:px-10 text-[10px] uppercase tracking-[0.2em] font-bold text-center gap-2 md:gap-0">
         <span className="animate-pulse">🔥 MEGA SALE: UP TO 70% OFF SITEWIDE</span>
         <div className="hidden md:flex gap-6 items-center">
           <span className="cursor-pointer text-white/80">Ends in: 24h 45m</span>
@@ -34,7 +34,7 @@ export default function MainLayout() {
               </Link>
 
               {/* Desktop Navigation */}
-              <nav className="hidden lg:flex items-center gap-8. text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+              <nav className="hidden lg:flex items-center gap-8 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
                 <Link to="/category/new" className="text-black cursor-pointer border-b border-black pb-1 hover:text-black transition-colors">New Arrivals</Link>
                 <Link to="/category/designers" className="hover:text-black cursor-pointer transition-colors">Designers</Link>
                 <Link to="/category/clothing" className="hover:text-black cursor-pointer transition-colors">Collections</Link>

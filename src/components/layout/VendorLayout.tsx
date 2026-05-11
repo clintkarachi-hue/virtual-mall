@@ -4,7 +4,7 @@ import { LayoutDashboard, Package, ShoppingCart, Settings, LogOut } from "lucide
 import { auth } from "../../lib/firebase";
 
 export default function VendorLayout() {
-  const { user, userRole } = useAuthStore();
+  const { user, userRole, isApproved } = useAuthStore();
   const navigate = useNavigate();
 
   if (!user || userRole !== "vendor") {
@@ -19,6 +19,26 @@ export default function VendorLayout() {
     await auth.signOut();
     navigate("/auth/login");
   };
+
+  if (isApproved === false) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center font-sans text-black">
+        <div className="bg-white border border-neutral-100 p-10 max-w-md w-full text-center shadow-sm">
+          <Package className="w-10 h-10 mx-auto text-neutral-400 mb-6 stroke-[1.5]" />
+          <h1 className="text-2xl font-light italic mb-4">Pending Approval</h1>
+          <p className="text-sm text-neutral-500 mb-8 leading-relaxed">
+            Your vendor account is currently pending approval by the administration. You will be notified once it is approved.
+          </p>
+          <button 
+            onClick={handleLogout}
+            className="w-full py-4 text-[10px] uppercase tracking-widest font-bold bg-black text-white hover:opacity-80 transition-opacity"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 flex font-sans text-black">

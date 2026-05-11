@@ -19,7 +19,8 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import VendorDashboard from "./pages/vendor/Dashboard";
 import VendorProducts from "./pages/vendor/Products";
-// import AdminDashboard from "./pages/admin/Dashboard";
+import AdminLayout from "./components/layout/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
 
 export default function App() {
   const { setUser, setLoading, user, userRole, isLoading } = useAuthStore();
@@ -30,14 +31,18 @@ export default function App() {
         // Fetch user role
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
-          const role = userDoc.exists() ? (userDoc.data().role as "customer" | "vendor" | "admin") : "customer";
-          setUser(user, role);
+          if (userDoc.exists()) {
+             const data = userDoc.data();
+             setUser(user, data.role as "customer" | "vendor" | "admin", data.isApproved);
+          } else {
+             setUser(user, "customer", true);
+          }
         } catch (error) {
           console.error("Error fetching user role", error);
-          setUser(user, "customer");
+          setUser(user, "customer", true);
         }
       } else {
-        setUser(null, null);
+        setUser(null);
       }
       setLoading(false);
     });
@@ -46,7 +51,16 @@ export default function App() {
   }, [setUser, setLoading]);
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center font-serif text-xl">Loading VM Mall...</div>;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center font-sans text-black bg-white">
+        <div className="text-2xl font-bold tracking-tighter uppercase mb-6 animate-pulse">
+          VM<span className="font-light italic px-1">VIRTUAL</span>MALL
+        </div>
+        <div className="w-48 h-[1px] bg-neutral-100 overflow-hidden relative">
+          <div className="absolute inset-y-0 left-0 w-1/2 bg-black animate-slide" />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -64,6 +78,11 @@ export default function App() {
            <Route index element={<VendorDashboard />} />
            <Route path="products" element={<VendorProducts />} />
            <Route path="*" element={<div className="p-8">Coming Soon</div>} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={userRole === "admin" ? <AdminLayout /> : <Navigate to="/auth/login" />}>
+           <Route index element={<AdminDashboard />} />
         </Route>
 
         <Route path="/auth/login" element={user ? <Navigate to="/" /> : <Login />} />

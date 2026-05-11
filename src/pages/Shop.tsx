@@ -19,9 +19,9 @@ export default function Shop() {
         // Put placeholder items if none exist
         if (data.length === 0) {
           setProducts([
-            { id: "1", title: "Silk Evening Gown", price: 1200, images: ["https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=1983&auto=format&fit=crop"] },
-            { id: "2", title: "Structured Leather Tote", price: 850, images: ["https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=1915&auto=format&fit=crop"] },
-            { id: "3", title: "Minimalist Watch", price: 450, images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1999&auto=format&fit=crop"] },
+            { id: "1", title: "Silk Evening Gown", price: 1200, images: ["https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=400&auto=format&fit=crop"] },
+            { id: "2", title: "Structured Leather Tote", price: 850, images: ["https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=400&auto=format&fit=crop"] },
+            { id: "3", title: "Minimalist Watch", price: 450, images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=400&auto=format&fit=crop"] },
           ]);
         } else {
           setProducts(data);
@@ -117,6 +117,7 @@ export default function Shop() {
                    <div className="relative aspect-[3/4] bg-white mb-2 shadow-sm overflow-hidden">
                      <img 
                        src={product.images?.[0] || product.image} 
+                       loading="lazy"
                        alt={product.title}
                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                      />
